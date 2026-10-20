@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Audit Control Centre</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1c2733;--mute:#5f6b7a;--line:#d9e0e8;--brand:#1f3a5f;--brand-ink:#fff;--g:#2e7d32;--a:#b86e00;--r:#c62828;--focus:#2b6cff}
+@media (prefers-color-scheme:dark){:root{--bg:#10151c;--card:#18202b;--ink:#e8edf4;--mute:#a3afbf;--line:#2c3746;--brand:#6f94e6;--brand-ink:#0b1220;--g:#5ad08a;--a:#f0b254;--r:#ff8a80;--focus:#8fb0ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:var(--brand);color:var(--brand-ink);padding:16px}
+header div{max-width:1100px;margin:0 auto}
+header h1{margin:0;font-size:1.15rem}header p{margin:2px 0 0;font-size:.9rem;opacity:.9}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 16px}
+h2{font-size:1.05rem;margin:0 0 6px}
+h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:22px 0 8px}
+p{margin:0 0 8px}.mute{color:var(--mute);font-size:.88rem}
+button,a.btn{font:inherit;font-size:.9rem;font-weight:600;border:1px solid var(--brand);border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer;background:transparent;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center}
+button.primary{background:var(--brand);color:var(--brand-ink)}
+button.danger{border-color:var(--r);color:var(--r)}
+button.on{background:var(--brand);color:var(--brand-ink)}
+button:disabled{opacity:.55;cursor:wait}
+button:focus-visible,input:focus,select:focus{outline:3px solid var(--focus);outline-offset:1px}
+input,select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;max-width:100%}
+label{display:block;font-size:.78rem;font-weight:700;color:var(--mute);margin:0 0 3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.audit{border-left:5px solid var(--line);display:flex;flex-direction:column;gap:6px;margin:0}
+.audit.GREEN{border-left-color:var(--g)}.audit.AMBER{border-left-color:var(--a)}.audit.RED{border-left-color:var(--r)}
+.name{font-weight:700}
+.chip{font-size:.72rem;font-weight:800;padding:2px 9px;border-radius:99px;color:#fff;background:var(--mute)}
+.chip.GREEN{background:var(--g)}.chip.AMBER{background:var(--a)}.chip.RED{background:var(--r)}
+.score{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.score b{font-size:1.5rem}
+.due{font-size:.82rem;font-weight:700}.st-ok{color:var(--g)}.st-due{color:var(--a)}.st-overdue,.st-never{color:var(--r)}.st-unset{color:var(--mute)}
+.msg{border-radius:8px;padding:10px 12px;margin:0 0 12px;border:1px solid var(--line)}
+.msg.warn{border-color:var(--a)}.msg.bad{border-color:var(--r)}.msg.ok{border-color:var(--g)}
+.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+.wrap{overflow-x:auto}
+tr.arch td{opacity:.55}
+.tag{font-size:.7rem;border:1px solid var(--line);border-radius:99px;padding:1px 7px;color:var(--mute);margin-left:6px}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:12px}
+.check{display:grid;grid-template-columns:2fr 1.4fr 1.4fr 1.4fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px}
+@media (max-width:800px){.check{grid-template-columns:1fr 1fr}}
+code{background:rgba(127,127,127,.18);padding:1px 5px;border-radius:4px}
+#bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}#bar i{display:block;height:100%;width:0;background:var(--brand);transition:width .2s}
+</style>
+</head>
+<body>
+<header><div><h1 id="co">Audit Control Centre</h1><p>Quality audits and reports</p></div></header>
+<main>
+  <div id="banner" class="msg warn hidden" role="status"></div>
+
+  <section id="signin" class="card" style="max-width:460px">
+    <h2>Sign in</h2>
+    <p>Sign in with your company Google account. Only people the Registered Manager has added can use this dashboard, and you will only see the audits you are responsible for.</p>
+    <div id="gbtn" style="min-height:44px"></div>
+    <p class="mute" style="margin-top:12px">No client information is stored on this page. It is shown only after you sign in.</p>
+    <p id="demo-note" class="hidden mute">Preview mode: made-up data, nothing is saved. <button id="demo-go" type="button">Continue in preview</button></p>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="row spread" style="margin-bottom:12px">
+      <div><strong id="who"></strong><br><span class="mute" id="role"></span></div>
+      <div class="row">
+        <button id="v-dash" class="on" type="button">Dashboard</button>
+        <button id="v-manage" class="hidden" type="button">Manage audits</button>
+        <button id="v-log" class="hidden" type="button">Activity</button>
+        <button id="signout" type="button">Sign out</button>
+      </div>
+    </div>
+
+    <div id="view-dash">
+      <div id="demo-banner" class="msg warn hidden">The audit tabs currently hold made-up demo records. Clear them (and set DEMO_DATA to FALSE on the Settings tab) before using real client data.</div>
+      <div class="row spread">
+        <div class="row" id="leads"></div>
+        <div class="row"><button id="summary" type="button">Summary PDF</button><button id="runall" class="primary" type="button">Run all</button></div>
+      </div>
+      <div id="progress" class="mute" role="status" aria-live="polite" style="margin-top:8px"></div><div id="bar" class="hidden"><i></i></div>
+      <div id="dueline" class="mute" style="margin-top:4px"></div>
+      <div id="cards"></div>
+    </div>
+
+    <div id="view-manage" class="hidden">
+      <div class="card">
+        <h2>Who leads each audit</h2>
+        <p class="mute">Pick a different lead and that person (and the Registered Manager) sees it straight away. Archive hides an audit but keeps its past reports.</p>
+        <div class="wrap"><table><thead><tr><th>Audit</th><th>Category</th><th>Frequency</th><th>Lead</th><th></th></tr></thead><tbody id="mrows"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>Add a new audit</h2>
+        <p class="mute">Describe the audit and the checks to run on each row. A tab with the right column headings is created in the workbook for you.</p>
+        <form id="addform" autocomplete="off">
+          <div class="form">
+            <div><label for="f-name">Audit name *</label><input id="f-name" required maxlength="80" placeholder="e.g. Medication Spot Check"></div>
+            <div><label for="f-category">Category *</label><input id="f-category" list="cats" required maxlength="60" placeholder="e.g. Care Delivery"><datalist id="cats"></datalist></div>
+            <div><label for="f-frequency">How often *</label><select id="f-frequency"></select></div>
+            <div><label for="f-lead">Lead (responsible) *</label><select id="f-lead"></select></div>
+            <div><label for="f-tab">Tab name in the workbook *</label><input id="f-tab" required maxlength="31" placeholder="e.g. Spot Checks"></div>
+            <div><label for="f-idColumn">Heading of unique ID column *</label><input id="f-idColumn" required maxlength="80" placeholder="e.g. Client ID"></div>
+            <div><label for="f-nameColumn">Heading of name column</label><input id="f-nameColumn" maxlength="80" placeholder="e.g. Client Name"></div>
+            <div><label for="f-regulation">Regulation (optional)</label><input id="f-regulation" maxlength="150" placeholder="e.g. Reg 12 Safe care"></div>
+          </div>
+          <h2 style="font-size:.95rem">Checks *</h2>
+          <p class="mute">Each check is a rule every row must pass. <b>Column heading</b> must match a heading in the tab exactly.</p>
+          <div id="checks"></div>
+          <div class="row"><button type="button" id="addcheck">+ Add a check</button><button class="primary" id="save">Create audit</button></div>
+        </form>
+        <div id="created" class="msg ok hidden" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <div id="view-log" class="hidden"><div class="card"><h2>Recent activity</h2><p class="mute">Sign-ins refused, audits run, reports opened and changes made. Newest first.</p>
+      <div class="wrap"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Detail</th></tr></thead><tbody id="lrows"></tbody></table></div></div></div>
+  </section>
+</main>
+<div id="toast" class="msg hidden" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);max-width:90%;margin:0"></div>
+
+<script src="config.js"></script>
+<script>
+const CFG = window.APP_CONFIG || {};
+const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+const $ = id => document.getElementById(id);
+const el = (tag, attrs, ...kids) => { const e = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => { if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.startsWith('on')) e[k] = v; else if (v !== false && v !== null && v !== undefined) e.setAttribute(k, v); }); kids.flat().forEach(k => e.append(k)); return e; };
+let token = '', S = { me: null, audits: [], lead: '', busy: false }, A = null;
+
+function banner(text, kind) { const b = $('banner'); b.className = 'msg ' + (kind || 'warn'); b.textContent = text; b.classList.toggle('hidden', !text); }
+let toastT; function toast(text, bad) { const t = $('toast'); t.textContent = text; t.className = 'msg ' + (bad ? 'bad' : 'ok'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 4000); }
+
+// ------------------------------------------------------------------ API
+async function api(body) {
+  if (DEMO) return demoApi(body);
+  const res = await fetch(CFG.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ idToken: token }, body)), redirect: 'follow' });
+  if (!res.ok) throw new Error('The server could not be reached (' + res.status + ').');
+  const r = await res.json();
+  if (!r.ok && r.signin) { needSignIn(r.error); throw new Error(r.error); }
+  return r;
+}
+function needSignIn(msg) {
+  token = ''; $('app').classList.add('hidden'); $('signin').classList.remove('hidden'); banner(msg || 'Please sign in again.', 'warn'); renderGoogleButton();
+}
+
+// ------------------------------------------------------------------ sign-in
+function renderGoogleButton() {
+  if (DEMO) { $('demo-note').classList.remove('hidden'); $('demo-go').onclick = () => { token = 'demo'; start(); }; return; }
+  if (!CFG.apiUrl || !CFG.googleClientId) { banner('This dashboard is not connected yet. Ask the Registered Manager to finish setting it up.', 'warn'); return; }
+  const go = () => {
+    if (!(window.google && google.accounts && google.accounts.id)) { setTimeout(go, 150); return; }
+    google.accounts.id.initialize({ client_id: CFG.googleClientId, callback: r => { token = r.credential; start(); }, auto_select: false });
+    $('gbtn').textContent = '';
+    google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', text: 'signin_with', width: 280 });
+  };
+  if (!document.getElementById('gsi')) { const s = document.createElement('script'); s.id = 'gsi'; s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.defer = true; document.head.append(s); }
+  go();
+}
+async function start() {
+  banner('');
+  try {
+    const r = await api({ action: 'status' });
+    if (!r.ok) { banner(r.error || 'Sign-in failed.', 'bad'); return; }
+    S.me = r.me; S.audits = r.audits; $('co').textContent = r.company || 'Audit Control Centre';
+    document.title = (r.company ? r.company + ' - ' : '') + 'Audit Control Centre';
+    $('who').textContent = r.me.name; $('role').textContent = r.me.role === 'admin' ? 'Full access: all audits' : 'Lead: ' + r.me.lead + ' (your audits only)';
+    $('v-manage').classList.toggle('hidden', r.me.role !== 'admin'); $('v-log').classList.toggle('hidden', r.me.role !== 'admin');
+    $('demo-banner').classList.toggle('hidden', !r.demo);
+    $('signin').classList.add('hidden'); $('app').classList.remove('hidden');
+    show('dash'); renderDash();
+  } catch (e) { if (!/sign/i.test(e.message)) banner(String(e.message || e), 'bad'); }
+}
+$('signout').onclick = () => { token = ''; if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); location.reload(); };
+
+// ------------------------------------------------------------------ dashboard
+const visible = () => S.audits.filter(a => !S.lead || a.lead === S.lead);
+function show(v) {
+  ['dash', 'manage', 'log'].forEach(x => { $('view-' + x).classList.toggle('hidden', x !== v); $('v-' + x).classList.toggle('on', x === v); });
+  if (v === 'manage') loadManage(); if (v === 'log') loadLog();
+}
+$('v-dash').onclick = () => { show('dash'); refreshStatus(); }; $('v-manage').onclick = () => show('manage'); $('v-log').onclick = () => show('log');
+async function refreshStatus() { try { const r = await api({ action: 'status' }); if (r.ok) { S.audits = r.audits; renderDash(); } } catch (e) {} }
+
+function renderDash() {
+  const leads = [...new Set(S.audits.map(a => a.lead))].sort(), box = $('leads'); box.textContent = '';
+  if (leads.length > 1) [['', 'Everyone'], ...leads.map(l => [l, l])].forEach(([v, label]) => box.append(el('button', { type: 'button', class: S.lead === v ? 'on' : '', text: label, onclick: () => { S.lead = v; renderDash(); } })));
+  const list = visible();
+  $('runall').textContent = S.lead ? `Run ${S.lead}'s audits (${list.length})` : `Run all (${list.length})`;
+  const late = list.filter(a => a.due.state === 'overdue' || a.due.state === 'never').length;
+  $('dueline').textContent = late ? `${late} audit${late > 1 ? 's' : ''} overdue or never run` : 'All audits up to date';
+  const groups = {}; list.forEach(a => (groups[a.category || 'Other'] = groups[a.category || 'Other'] || []).push(a));
+  const out = $('cards'); out.textContent = '';
+  Object.keys(groups).forEach(cat => out.append(el('h3', { text: cat }), el('div', { class: 'grid' }, groups[cat].map(card))));
+  if (!list.length) out.append(el('p', { class: 'mute', text: 'No audits to show.' }));
+}
+function card(a) {
+  const l = a.last, rag = l ? (l.error ? 'RED' : l.rag) : '';
+  const c = el('div', { class: 'card audit ' + rag, 'data-id': a.id },
+    el('div', { class: 'name', text: a.name }),
+    el('div', { class: 'mute', text: `${a.frequency} · Lead: ${a.lead}` }),
+    el('div', { class: 'due st-' + a.due.state, text: a.due.label }),
+    l ? el('div', { class: 'score' }, el('b', { text: l.error ? 'Error' : l.score.toFixed(1) + '%' }), el('span', { class: 'chip ' + rag, text: l.error ? 'ERROR' : l.rag }), el('span', { class: 'mute', text: `${l.failed} findings · ${l.critical} critical` })) : el('div', { class: 'mute', text: 'Not run yet' }),
+    l ? el('div', { class: 'mute', text: 'Last run ' + l.when + ' by ' + l.runBy + (l.error ? ' — ' + l.error : '') }) : '',
+    el('div', { class: 'row', style: 'margin-top:auto' }, el('button', { type: 'button', class: 'primary', text: 'Run audit', onclick: () => runOne(a.id) }), l ? el('button', { type: 'button', text: 'Open PDF', onclick: () => openPdf({ action: 'report', runId: l.runId }) }) : ''));
+  return c;
+}
+function setBusy(b) { S.busy = b; document.querySelectorAll('#view-dash button, #leads button').forEach(x => { x.disabled = b; }); }
+async function runOne(id, quiet) {
+  const a = S.audits.find(x => x.id === id);
+  if (!quiet) { setBusy(true); $('progress').textContent = 'Running ' + a.name + '...'; }
+  try {
+    const r = await api({ action: 'run', id });
+    if (!r.ok) { toast(r.error || 'Could not run.', true); return false; }
+    a.last = r.entry; a.due = r.due; return true;
+  } catch (e) { toast('Could not run. ' + (e.message || ''), true); return false; }
+  finally { if (!quiet) { $('progress').textContent = ''; setBusy(false); renderDash(); } }
+}
+$('runall').onclick = async () => {
+  const list = visible(); if (!list.length) return; setBusy(true); $('bar').classList.remove('hidden'); let bad = 0;
+  for (let i = 0; i < list.length; i++) {
+    $('progress').textContent = `Running ${i + 1} of ${list.length}: ${list[i].name}`; $('bar').firstChild.style.width = (100 * i / list.length) + '%';
+    if (!(await runOne(list[i].id, true))) bad++;
+  }
+  $('bar').firstChild.style.width = '100%'; setTimeout(() => $('bar').classList.add('hidden'), 800);
+  $('progress').textContent = `Finished ${list.length - bad} of ${list.length}.` + (bad ? ` ${bad} could not run.` : '') + ' Open "Summary PDF" for the overview.';
+  setBusy(false); renderDash();
+};
+$('summary').onclick = () => openPdf({ action: 'summary', lead: S.lead });
+function b64Blob(b64) { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: 'application/pdf' }); }
+async function openPdf(body) {
+  const w = window.open('', '_blank');                      // opened inside the click so the browser allows it
+  try {
+    const r = await api(body);
+    if (!r.ok) throw new Error(r.error || 'Could not open the report.');
+    const url = URL.createObjectURL(b64Blob(r.pdf));
+    if (w) { w.location.href = url; } else { const a = el('a', { href: url, download: r.filename }); document.body.append(a); a.click(); a.remove(); }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+  } catch (e) { if (w) w.close(); toast(e.message || 'Could not open the report.', true); }
+}
+
+// ------------------------------------------------------------------ manage (full access only)
+const TYPE_LABEL = { not_blank: 'must not be blank', date_within_days: 'date no older than N days', date_not_expired: 'date not in the past', in: 'must be one of (comma list)', not_in: 'must NOT be one of', equals: 'must equal', max: 'number at most', min: 'number at least' };
+const HINT = { date_within_days: 'days, e.g. 365', equals: 'e.g. Yes', in: 'e.g. Yes, N/A', not_in: 'e.g. No', max: 'e.g. 0', min: 'e.g. 4', not_blank: '(no value needed)', date_not_expired: '(no value needed)' };
+async function loadManage() {
+  try { const r = await api({ action: 'admin_state' }); if (!r.ok) { toast(r.error, true); return; } renderManage(r); if (!$('checks').children.length) addCheck(); } catch (e) { toast(e.message, true); }
+}
+function renderManage(d) {
+  A = d; const body = $('mrows'); body.textContent = '';
+  d.audits.forEach(a => body.append(el('tr', { class: a.archived ? 'arch' : '' },
+    el('td', {}, el('b', { text: a.name }), a.archived ? el('span', { class: 'tag', text: 'archived' }) : ''),
+    el('td', { text: a.category }), el('td', { text: a.frequency }),
+    el('td', {}, el('select', { 'aria-label': 'Lead for ' + a.name, onchange: ev => assign(a.id, ev.target.value) }, d.leads.map(l => el('option', { value: l, text: l, selected: l === a.lead ? 'selected' : false })))),
+    el('td', {}, el('button', { type: 'button', class: a.archived ? '' : 'danger', text: a.archived ? 'Restore' : 'Archive', onclick: () => archive(a, !a.archived) })))));
+  const keepF = $('f-frequency').value, keepL = $('f-lead').value;
+  $('f-frequency').replaceChildren(...d.frequencies.map(f => el('option', { text: f }))); $('f-lead').replaceChildren(...d.leads.map(l => el('option', { text: l })));
+  if (keepF) $('f-frequency').value = keepF; if (keepL) $('f-lead').value = keepL;
+  $('cats').replaceChildren(...d.categories.map(c => el('option', { value: c })));
+}
+async function assign(id, lead) { try { const r = await api({ action: 'admin_assign', id, lead }); if (!r.ok) { toast(r.error, true); loadManage(); return; } renderManage(r); toast('Lead updated.'); } catch (e) { toast(e.message, true); } }
+async function archive(a, flag) {
+  if (flag && !confirm('Archive "' + a.name + '"? It disappears from everyone\'s dashboard. Past reports are kept and you can restore it.')) return;
+  try { const r = await api({ action: 'admin_archive', id: a.id, archived: flag }); if (!r.ok) { toast(r.error, true); return; } renderManage(r); toast(flag ? 'Archived.' : 'Restored.'); } catch (e) { toast(e.message, true); }
+}
+function addCheck() {
+  const type = el('select', { class: 'c-type' }, A.types.map(t => el('option', { value: t, text: TYPE_LABEL[t] }))), val = el('input', { class: 'c-val', maxlength: 80 });
+  const sync = () => { val.placeholder = HINT[type.value] || ''; val.disabled = ['not_blank', 'date_not_expired'].includes(type.value); if (val.disabled) val.value = ''; };
+  type.onchange = sync; sync();
+  const row = el('div', { class: 'check' },
+    el('div', {}, el('label', { text: 'What is being checked *' }), el('input', { class: 'c-name', maxlength: 100, placeholder: 'e.g. Reviewed within 12 months' })),
+    el('div', {}, el('label', { text: 'Column heading *' }), el('input', { class: 'c-col', maxlength: 80, placeholder: 'e.g. Last Review Date' })),
+    el('div', {}, el('label', { text: 'Rule *' }), type), el('div', {}, el('label', { text: 'Value' }), val),
+    el('div', {}, el('label', { text: 'If it fails' }), el('select', { class: 'c-sev' }, A.severities.map(s => el('option', { text: s, selected: s === 'major' ? 'selected' : false })))),
+    el('div', {}, el('button', { type: 'button', class: 'danger', title: 'Remove', text: '×', onclick: () => row.remove() })));
+  $('checks').append(row);
+}
+$('addcheck').onclick = addCheck;
+$('addform').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const checks = [...document.querySelectorAll('#checks .check')].map(r => ({ name: r.querySelector('.c-name').value, column: r.querySelector('.c-col').value, type: r.querySelector('.c-type').value, value: r.querySelector('.c-val').value, severity: r.querySelector('.c-sev').value }));
+  const body = { action: 'admin_add', checks }; ['name', 'category', 'frequency', 'lead', 'tab', 'idColumn', 'nameColumn', 'regulation'].forEach(k => { body[k] = $('f-' + k).value; });
+  $('save').disabled = true;
+  try {
+    const r = await api(body);
+    if (!r.ok) { toast(r.error, true); return; }
+    renderManage(r); const c = r.created;
+    $('created').classList.remove('hidden');
+    $('created').replaceChildren(...[el('b', { text: '"' + c.name + '" created. ' }), 'It now appears on the lead\'s dashboard. ',
+      c.tabCreated ? ['A tab named ', el('code', { text: c.tab }), ' was created in the workbook with these headings in row 1: '] : ['The tab ', el('code', { text: c.tab }), ' already existed. Make sure it has these headings in row 1: '],
+      c.headings.map(h => [el('code', { text: h }), ' ']), el('br'), el('span', { class: 'mute', text: 'Add your records underneath, one per row, then run the audit.' })].flat(2));
+    $('addform').reset(); $('checks').textContent = ''; addCheck(); $('created').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { toast(e.message, true); } finally { $('save').disabled = false; }
+});
+
+// ------------------------------------------------------------------ activity (full access only)
+async function loadLog() {
+  const body = $('lrows'); body.textContent = '';
+  try { const r = await api({ action: 'admin_log' }); if (!r.ok) { toast(r.error, true); return; } r.log.forEach(x => body.append(el('tr', {}, el('td', { text: x.when }), el('td', { text: x.user }), el('td', { text: x.action }), el('td', { text: x.detail })))); } catch (e) { toast(e.message, true); }
+}
+
+// ------------------------------------------------------------------ preview mode (?demo=1): made-up data, nothing is sent anywhere
+const DEMO_STATE = { audits: [
+  ['mar_charts', 'Medication Administration (MAR)', 'Care Delivery', 'Monthly', 'Cassandra'], ['care_plans', 'Care Plan Audit', 'Care Delivery', 'Monthly', 'Cassandra'],
+  ['ipc', 'Infection Prevention & Control', 'Care Delivery', 'Monthly', 'Esther'], ['training', 'Training & Competency', 'Staffing & HR', 'Quarterly', 'Mateen'],
+  ['fire_safety', 'Fire Safety Audit', 'Health & Safety', 'Annual', 'Esther'], ['mock_cqc', 'Mock CQC Inspection', 'Regulatory & CQC', 'Quarterly', 'Registered Manager']].map(a => ({ id: a[0], name: a[1], category: a[2], frequency: a[3], lead: a[4], archived: false, last: null })), n: 0 };
+const DEMO_PDF = 'JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgMzAwIDEwMF0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUj4+CiUlRU9G';
+function demoApi(b) {
+  const S2 = DEMO_STATE, view = a => ({ id: a.id, name: a.name, category: a.category, frequency: a.frequency, lead: a.lead, last: a.last, due: a.last ? { label: 'Next due in 30 days', state: 'ok' } : { label: 'Never run', state: 'never' } });
+  const leads = [...new Set(S2.audits.map(a => a.lead))].sort();
+  const adminState = () => ({ ok: true, audits: S2.audits.map(a => ({ id: a.id, name: a.name, category: a.category, frequency: a.frequency, lead: a.lead, archived: a.archived })), leads, categories: ['Care Delivery', 'Governance'], frequencies: ['Weekly', 'Monthly', 'Quarterly', 'Bi-Annual', 'Annual'], types: Object.keys(TYPE_LABEL), severities: ['critical', 'major', 'minor'] });
+  switch (b.action) {
+    case 'status': return { ok: true, company: 'Rosie Nightingale Homecare', demo: true, me: { name: 'Rashid (preview)', role: 'admin', lead: 'Registered Manager' }, audits: S2.audits.filter(a => !a.archived).map(view) };
+    case 'run': { const a = S2.audits.find(x => x.id === b.id), s = [97.4, 88.1, 71.5][S2.n++ % 3]; a.last = { runId: 'DEMO' + S2.n, when: '20/10/2026 12:00', runBy: 'Rashid (preview)', score: s, rag: s >= 95 ? 'GREEN' : s >= 85 ? 'AMBER' : 'RED', failed: s >= 95 ? 2 : 11, critical: s >= 95 ? 0 : 3, records: 24, error: '' }; return { ok: true, entry: a.last, due: { label: 'Next due in 31 days', state: 'ok' } }; }
+    case 'report': case 'summary': return { ok: true, filename: 'preview.pdf', pdf: DEMO_PDF };
+    case 'admin_state': return adminState();
+    case 'admin_assign': S2.audits.find(x => x.id === b.id).lead = b.lead; return adminState();
+    case 'admin_archive': S2.audits.find(x => x.id === b.id).archived = !!b.archived; return adminState();
+    case 'admin_add': { if (!b.name) return { ok: false, error: 'Audit name is required.' }; const id = b.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'); S2.audits.push({ id, name: b.name, category: b.category, frequency: b.frequency, lead: b.lead, archived: false, last: null }); const s = adminState(); s.created = { id, name: b.name, tab: b.tab, tabCreated: true, headings: [b.idColumn, b.nameColumn || b.idColumn].concat(b.checks.map(c => c.column)) }; return s; }
+    case 'admin_log': return { ok: true, log: [{ when: '2026-10-20 12:00:01', user: 'preview', action: 'run', detail: 'mar_charts AMBER 88.1' }] };
+  }
+  return { ok: false, error: 'Unknown request.' };
+}
+
+renderGoogleButton();
+</script>
+</body>
+</html>
